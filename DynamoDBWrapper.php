@@ -1,5 +1,18 @@
 <?php
 
+/* This Library updated by yahoolane, https://github.com/yahoolane 
+* First fix the Scan Function   is_empty does not work fixed the if. 
+* it does not work with BOOL  (Boolean type varables.) 
+* fixed the convertitem
+*  Added Convertitem2  to allow to get the type of the varable. 
+*  Added Function to list tables.  (getTables, and tableDetails)
+*   with the above functions, you can list and copy tables. 
+*   
+* 
+*
+
+
+*/
 use Aws\DynamoDb\DynamoDbClient;
 use Aws\DynamoDb\Exception\ConditionalCheckFailedException;
 
@@ -12,6 +25,24 @@ class DynamoDBWrapper
         $this->client = DynamoDbClient::factory($args);
     }
 
+    
+  public function getTables()
+    {
+        $args = array(
+        );
+        $item = $this->client->listTables($args);
+        return $item;
+    }
+
+    public function tableDetails($tableName)
+    {
+        $args = array(
+        'TableName' => $tableName,
+        );
+        $item = $this->client->describeTable($args);
+        return $item;
+    }    
+    
     public function get($tableName, $key, $options = array())
     {
         $args = array(
@@ -116,17 +147,25 @@ class DynamoDBWrapper
 
     public function scan($tableName, $filter, $limit = null)
     {
+// Fix by Lane Fowler (yahoolane)
         if (empty($filter)) {
-            $scanFilter = null;
+
+        $items = $this->client->getIterator('Scan', array(  // if there is no filter, just include the table. 
+            'TableName' => $tableName,
+        ));
+
         } else {
             $scanFilter = $this->convertConditions($filter);
-        }
         $items = $this->client->getIterator('Scan', array(
             'TableName' => $tableName,
             'ScanFilter' => $scanFilter,
         ));
+
+
+        }
         return $this->convertItems($items);
     }
+
 
     public function put($tableName, $item, $expected = array())
     {
@@ -328,13 +367,46 @@ class DynamoDBWrapper
         }
         return $newValue;
     }
+    
+        protected function asInt($value)
+    {
+        if (is_array($value)) {
+            $newValue = array();
+            foreach ($value as $v) {
+                $newValue[] = (int)$v;
+            }
+        } else {
+            $newValue = (int)$value;
+        }
+        return $newValue;
+    }
+
+    protected function asBoolean($value)
+    {
+        if (is_array($value)) {
+            $newValue = array();
+            foreach ($value as $v) {
+                $newValue[] = (int)$v;
+            }
+        } else {
+            $newValue = (boolean)$value;
+        }
+        return $newValue;
+    }
+        
 
     protected function convertAttributes($targets)
     {
         $newTargets = array();
         foreach ($targets as $k => $v) {
             $attrComponents = $this->convertComponents($k);
-            $newTargets[$attrComponents[0]] = array($attrComponents[1] => $this->asString($v));
+       // Lane bool special  
+            if ($attrComponents[1]=='BOOL') {
+               $newTargets[$attrComponents[0]] = array($attrComponents[1] => $this->asBoolean($v));
+            } else {
+               $newTargets[$attrComponents[0]] = array($attrComponents[1] => $this->asString($v));
+            }
+
         }
         return $newTargets;
     }
@@ -424,13 +496,58 @@ class DynamoDBWrapper
             else if (isset($v['BS'])) {
                 $converted[$k] = $v['BS'];
             }
+          else if (isset($v['BOOL'])) {  //yahoolane Added  // handel this Boolean 
+                $converted[$k.] = $v['BOOL'];
+            }
             else {
                 throw new Exception('Not implemented type');
             }
         }
         return $converted;
     }
+// Same as convert items but returns the varable type for reinserting into the table. 
+    protected function convertItem2($item)
+    {
+        if (empty($item)) return null;
+        $converted = array();
+        foreach ($item as $k => $v) {
+           
+            if (isset($v['S'])) {
+                $converted[$k.'::S'] = $v['S'];
+            }
+            else if (isset($v['SS'])) {
+                $converted[$k.'::S'] = $v['SS'];
+            }
+            else if (isset($v['N'])) {
+                $converted[$k.'::N'] = $v['N'];
+            }
+            else if (isset($v['NS'])) {
+                $converted[$k.'::NS'] = $v['NS'];
+            }
+            else if (isset($v['B'])) {
+                $converted[$k.'::B'] = $v['B'];
+            }
+            else if (isset($v['BS'])) {
+                $converted[$k.'::BS'] = $v['BS'];
 
+            }
+            else if (isset($v['BOOL'])) {  //Lane Added 
+                $converted[$k.'::BOOL'] = $v['BOOL'];
+
+            }
+
+
+            else {
+                throw new Exception('Not implemented type: '.$k.' '.print_r($v,true));
+            }
+        }
+        return $converted;
+    }
+
+ 
+    
+    
+    
     protected function convertItems($items)
     {
         $converted = array();
