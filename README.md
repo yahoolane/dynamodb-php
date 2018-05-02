@@ -27,11 +27,13 @@ First of all, DynamoDBWrapper needs to be instantiated like this:
 ```php
 <?php
 
-require_once '/path/to/aws-autoloader.php'; // provided by AWS
+require_once '/path/to/aws-autoloader.php'; // provided by AWS  this is normaly in the root. 
 require_once '/path/to/DynamoDBWrapper.php'; // this module
 
 // First Correction my Lane  (Yahoolane)
+date_default_timezone_set('America/New_York');  // This also seem to make things work better. 
 
+// The version fixes a few issus, and notice credentials are in an array . 
 $ddb = new DynamoDBWrapper(array(
    'version' => latest,
    'region' => 'us-east-1', // Yes put our Region here. 
