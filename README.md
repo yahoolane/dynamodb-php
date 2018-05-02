@@ -1,3 +1,16 @@
+
+I found this is a great, php for dynamodb 
+
+There are many bugs, 
+
+and it needs some examples. 
+
+I tend to make this a great library. 
+
+Please donate,  
+https://www.paypal.me/LaneFowler
+
+
 # dynamodb-php-wrapper
 Access AWS DynamoDB through simpler interface in PHP
 
