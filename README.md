@@ -22,6 +22,18 @@ This section assumes that:
 * There is a table 'User', which has hash key 'UserId' as Number.
 * There is a table 'Friend', which has hash key 'UserId' as Number and range key 'FriendUserId' as Number.
 
+Some great Features of the Library, 
+if you need an entry to be a number 
+Then make the key   [userid::N]    this will force the key to be a number
+by default all varables are strings. 
+
+[isactive::BOOL]  will make this key a Boolean. 
+[username::S]  will make this key a String. 
+
+
+
+
+
 ## init
 First of all, DynamoDBWrapper needs to be instantiated like this: 
 ```php
@@ -151,6 +163,9 @@ Array
 )
 */
 ```
+IF you use scanWT(   it will return the same data but they key type will be added to the key [UserId::N]  showing
+that the UserId  is a number,,  this will be useful when you insert a new record into your database. 
+
 
 ## count
 count is a wrapper of [Query](http://docs.aws.amazon.com/amazondynamodb/latest/APIReference//API_Query.html) with _Select_ param as COUNT. This return the number of items query fetches and will be used like this:
