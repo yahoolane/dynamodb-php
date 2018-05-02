@@ -7,7 +7,7 @@
 *  Added Convertitem2  to allow to get the type of the varable. 
 *  Added Function to list tables.  (getTables, and tableDetails)
 *   with the above functions, you can list and copy tables. 
-*   
+*  Added the ScanWT  scan with type , will need todo this with the other functions.    
 * 
 *
 
@@ -165,7 +165,29 @@ class DynamoDBWrapper
         }
         return $this->convertItems($items);
     }
+    
+    // Same as Scan but also returns the type of the key 
+    public function scanWT($tableName, $filter, $limit = null)
+    {
+// Fix by Lane Fowler (yahoolane)
+        if (empty($filter)) {
 
+        $items = $this->client->getIterator('Scan', array(
+            'TableName' => $tableName,
+        ));
+
+        } else {
+            $scanFilter = $this->convertConditions($filter);
+        $items = $this->client->getIterator('Scan', array(
+            'TableName' => $tableName,
+            'ScanFilter' => $scanFilter,
+        ));
+
+
+        }
+        return $this->convertItems2($items);
+    }
+    
 
     public function put($tableName, $item, $expected = array())
     {
@@ -557,6 +579,17 @@ class DynamoDBWrapper
         return $converted;
     }
 
+// Same as convertItems but it returns the type of the key also 
+    protected function convertItems2($items)
+    {
+        $converted = array();
+        foreach ($items as $item) {
+            $converted []= $this->convertItem2($item);
+        }
+        return $converted;
+    }
+  
+    
     /**
      * convert string attribute paramter to array components.
      * 
