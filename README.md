@@ -30,11 +30,21 @@ First of all, DynamoDBWrapper needs to be instantiated like this:
 require_once '/path/to/aws-autoloader.php'; // provided by AWS
 require_once '/path/to/DynamoDBWrapper.php'; // this module
 
+// First Correction my Lane  (Yahoolane)
+
 $ddb = new DynamoDBWrapper(array(
+   'version' => latest,
+   'region' => 'us-east-1', // Yes put our Region here. 
+   
+ 'credentials' => array(
     'key'    => 'YOUR_KEY',
-    'secret' => 'YOUR_SECRET_KEY',
-    'region' => 'SOME_REGION'
+    'secret' => 'YOUR_Secret'
+  )
+     
 ));
+
+As a note, you can hide the crendentials by using profile, read this on aws. 
+
 ```
 then, you can access DynamoDB through this instance.
 
